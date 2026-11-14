@@ -1,0 +1,24 @@
+# Never commit data, embeddings, weights or secrets
+*.h5
+*.hdf5
+*.npy
+*.npz
+*.parquet
+*.tsv
+*.tar.gz
+*.joblib
+*.safetensors
+*.bin
+*.pt
+tcga10/
+out/
+tcga_data*/
+private/
+expr_raw/
+uni2_tmp/
+checkpoints/
+.env
+*token*
+__pycache__/
+.pytest_cache/
+.ipynb_checkpoints/

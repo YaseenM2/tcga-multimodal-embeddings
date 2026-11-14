@@ -1,0 +1,5 @@
+# BioMistral-7B report embeddings (CUDA GPU). Versions used for the 7,982-report run:
+transformers==5.22.1
+accelerate==1.15.0
+bitsandbytes==0.50.2
+# torch: use the CUDA build that ships with Colab
