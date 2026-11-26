@@ -29,7 +29,7 @@ def _npy(root, folder, case_id, name, vec):
 
 
 def _contract_checks(path, expected_ids, dim):
-    """The same checks as the team's data/validate.py."""
+    """The Parquet contract checks: columns, types, one row per case."""
     table = pq.read_table(path)
     assert set(table.column_names) == {"case_id", "embedding", "n_sources"}
     assert table.schema.field("case_id").type == pa.string()

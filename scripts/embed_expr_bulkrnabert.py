@@ -9,8 +9,8 @@ Reproduces the authors' ``embed/embed_expr_bulkrnabert.py`` recipe:
 * model: ``bulk_rna_bert_gtex_encode`` (not trained on TCGA), float32;
 * embedding: layer-4 token embeddings, mean over the gene axis -> 256 values.
 
-Output is the authors' HDF5 layout, so ``convert_h5_embeddings.py`` and the
-team's ``replicate_paper.py`` can read it directly::
+Output is the authors' HDF5 layout, so ``convert_h5_embeddings.py`` can read it
+directly::
 
     expr.h5 / <TCGA-case-id> / <file identifier>   -> float32 (256,)
 

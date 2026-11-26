@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Export per-file embeddings to the team's patient-level Parquet contract.
+"""Export per-file embeddings to the patient-level Parquet contract.
 
 Writes ``<modality>.parquet`` with exactly one row per ``case_id`` listed in
-``--cases`` (the team's ``data/clinical.csv``):
+``--cases`` (a ``clinical.csv`` with a ``case_id`` column):
 
 =============  ===============  ==========================================
 column         Arrow type       meaning
@@ -36,8 +36,8 @@ covered cases only and lists how many are missing.
 Example::
 
     python scripts/export_parquet.py --modality expr --h5 /content/expr.h5 \\
-        --cases DL4H-project/data/clinical.csv \\
-        --output DL4H-project/data/embeddings/expr.parquet
+        --cases tcga10/clinical.csv \\
+        --output out/expr.parquet
 """
 from __future__ import annotations
 
@@ -176,9 +176,9 @@ def main(argv: list[str] | None = None) -> None:
     src = p.add_mutually_exclusive_group(required=True)
     src.add_argument("--npy-root", type=Path, help="folder holding embeddings/<report|histology|expression>/")
     src.add_argument("--h5", type=Path, help="authors'-layout HDF5 (<case_id>/<file_id>)")
-    p.add_argument("--cases", type=Path, required=True, help="team's data/clinical.csv")
+    p.add_argument("--cases", type=Path, required=True, help="clinical.csv with the case_id values to export")
     p.add_argument("--output", type=Path, required=True, help="e.g. data/embeddings/expr.parquet")
-    p.add_argument("--reports", type=Path, help="team's data/reports.csv (text: check source files)")
+    p.add_argument("--reports", type=Path, help="reports.csv (case_id, patient_filename): check text sources")
     p.add_argument("--allow-missing", action="store_true")
     p.add_argument("--note", default="", help="provenance stored in the Parquet schema metadata")
     args = p.parse_args(argv)

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Write the study subset for chosen TCGA projects (default: the team's 10).
+"""Write the study subset for chosen TCGA projects (default: 10 projects).
 
 Reads the authors' ``data/clinical.csv`` and ``results/split_cases.csv`` and
 writes both files, restricted to the chosen projects, into ``--out-dir``. The
-written folder is a valid data root for PyHealth's TCGAMultimodalDataset, for
-``validate_tcga_data.py`` and for ``convert_h5_embeddings.py``.
+written folder is a valid root for the per-file embedding layout of
+``validate_tcga_data.py`` and ``convert_h5_embeddings.py``. It is not the
+PyHealth input folder; ``export_pyhealth.py`` writes that one.
 
 Only aggregate counts are printed; ``cohort_summary.csv`` holds counts only.
 
@@ -22,7 +23,7 @@ from pathlib import Path
 
 import pandas as pd
 
-# CS598 DLH team scope (proposal Section 3; "USC" in the proposal is TCGA-UCS).
+# Default scope: ten TCGA projects. "UCS" is TCGA-UCS; "USC" is not a TCGA code.
 DEFAULT_PROJECTS = ("CESC", "CHOL", "DLBC", "ESCA", "KICH", "MESO", "OV", "READ", "UCS", "UVM")
 
 
