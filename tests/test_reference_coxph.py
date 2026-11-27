@@ -57,3 +57,44 @@ def test_missing_embedding_rows_are_an_error(tmp_path):
     pq.write_table(t, tmp_path / "embeddings" / "expr.parquet")
     with pytest.raises(ValueError, match="50 cases have no embedding"):
         ref.load(tmp_path, ["expr"])
+
+
+def test_split_cases_csv_gives_the_same_folds(tmp_path):
+    _contract(tmp_path)
+    folds = pd.read_csv(tmp_path / "folds.csv")
+    expected, _, _ = ref.load(tmp_path, [])
+    (tmp_path / "folds.csv").unlink()
+    folds.rename(columns={"fold": "split"}).assign(split_order=0).to_csv(
+        tmp_path / "split_cases.csv", index=False)
+    df, y, feats = ref.load(tmp_path, ["expr"])
+    assert df["fold"].tolist() == expected["fold"].tolist()
+    assert len(y) == len(df) == 150 and feats["expr"].shape == (150, 24)
+
+
+def test_split_cases_csv_skips_cases_without_a_split(tmp_path, capsys):
+    _contract(tmp_path)
+    folds = pd.read_csv(tmp_path / "folds.csv")
+    (tmp_path / "folds.csv").unlink()
+    folds.rename(columns={"fold": "split"}).head(100).to_csv(tmp_path / "split_cases.csv", index=False)
+    df, y, feats = ref.load(tmp_path, ["expr"])
+    note = "50 of 150 clinical.csv cases have no row in split_cases.csv; skipped"
+    assert note in capsys.readouterr().out
+    assert sorted(df["case_id"]) == sorted(folds["case_id"].head(100))
+    assert len(y) == 100 and feats["expr"].shape == (100, 24)
+
+
+def test_split_cases_csv_without_matching_cases_is_an_error(tmp_path):
+    _contract(tmp_path)
+    (tmp_path / "folds.csv").unlink()
+    pd.DataFrame({"case_id": ["TCGA-ZZ-9999"], "split": [0]}).to_csv(
+        tmp_path / "split_cases.csv", index=False)
+    with pytest.raises(ValueError, match="no case in clinical.csv has a row in split_cases.csv"):
+        ref.load(tmp_path, ["expr"])
+
+
+def test_folds_csv_must_still_cover_every_case(tmp_path):
+    _contract(tmp_path)
+    folds = pd.read_csv(tmp_path / "folds.csv")
+    folds.head(100).to_csv(tmp_path / "folds.csv", index=False)
+    with pytest.raises(ValueError, match="folds.csv does not cover every case"):
+        ref.load(tmp_path, [])

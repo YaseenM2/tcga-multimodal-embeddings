@@ -18,7 +18,10 @@ expr_raw/
 uni2_tmp/
 checkpoints/
 .env
+.venv/
 *token*
 __pycache__/
 .pytest_cache/
 .ipynb_checkpoints/
+pyhealth_root/
+BulkRNABert/

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit patient-aligned TCGA clinical, fold and PyHealth embedding inputs.
+"""Audit patient-aligned TCGA clinical, fold and per-file embedding inputs.
 
 CPU-only and READ-ONLY: never modifies data or loads a foundation model.
 Summarizes report, histology and/or expression modality coverage, numerical
@@ -8,13 +8,13 @@ explicitly listed via --require-complete. A requested modality may have no
 folder yet; this is reported as zero coverage, not silently treated as complete.
 
 Examples:
-  python data/scripts/validate_tcga_data.py --root /private/tcga_data \\
+  python scripts/validate_tcga_data.py --root tcga10 \\
     --modalities report histology expression --require-complete report
 
-  python data/scripts/validate_tcga_data.py --root /private/tcga_data \\
+  python scripts/validate_tcga_data.py --root tcga10 \\
     --modalities report --require-complete report \\
-    --report-manifest /private/report_embedding_manifest.csv \\
-    --json-out /private/multimodal_validation.json
+    --report-manifest tcga10/report_embedding_manifest.csv \\
+    --json-out tcga10/multimodal_validation.json
 """
 
 from __future__ import annotations
@@ -206,7 +206,7 @@ def audit_data(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, required=True, help="PyHealth tcga_data root")
+    parser.add_argument("--root", type=Path, required=True, help="root of the per-file embedding layout")
     parser.add_argument("--modalities", nargs="+", choices=sorted(MODALITY_DIMS),
                         default=["report", "histology", "expression"])
     parser.add_argument("--require-complete", nargs="*", choices=sorted(MODALITY_DIMS),

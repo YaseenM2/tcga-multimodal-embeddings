@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Pack per-file .npy embeddings into one HDF5 file in the authors' layout.
 
-Input (what our scripts and PyHealth's loader use)::
+Input (the per-file embedding layout our scripts use; the PyHealth input
+folder is what ``export_pyhealth.py`` writes)::
 
     <root>/embeddings/<modality>/<TCGA-case-id>/<file_id>.npy
 
-Output (what the authors' notebooks, ``convert_h5_embeddings.py`` and the
-team's ``replicate_paper.py`` read; e.g. ``summ.h5``, ``expr.h5``)::
+Output (what the authors' notebooks and ``convert_h5_embeddings.py`` read;
+e.g. ``summ.h5``, ``expr.h5``)::
 
     <TCGA-case-id>/<file_id>  -> 1-D float32 dataset
 

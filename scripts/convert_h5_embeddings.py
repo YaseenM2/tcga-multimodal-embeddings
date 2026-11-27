@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Convert pre-pooled TCGA HDF5 vectors into patient-level PyHealth .npy files.
+"""Convert pre-pooled TCGA HDF5 vectors into per-file .npy embeddings.
 
 Supported input hierarchy (the authors' post-embedding format):
 
@@ -11,14 +11,15 @@ Output (same source filename plus '.npy'):
 
 This tool does NOT pool histology patches, run foundation models, infer case IDs
 from slide barcodes, or normalize vectors. Use aggregate_uni2_histology.py for
-raw UNI2-h tile-feature archives before using PyHealth.
+raw UNI2-h tile-feature archives. This per-file layout is not the PyHealth
+input folder; ``export_pyhealth.py`` writes that one.
 
 Examples:
-  python data/scripts/convert_h5_embeddings.py --h5 /private/expr.h5 \\
-      --modality expression --out-root /private/tcga_data --study-only
+  python scripts/convert_h5_embeddings.py --h5 tcga10/expr.h5 \\
+      --modality expression --out-root tcga10 --study-only
 
-  python data/scripts/convert_h5_embeddings.py --h5 /private/expr.h5 \\
-      --modality expression --out-root /private/tcga_data --study-only --check-only
+  python scripts/convert_h5_embeddings.py --h5 tcga10/expr.h5 \\
+      --modality expression --out-root tcga10 --study-only --check-only
 """
 from __future__ import annotations
 
@@ -183,7 +184,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--h5", type=Path, required=True, help="Pre-pooled grouped HDF5 file")
     parser.add_argument("--modality", choices=sorted(DIMS), required=True)
-    parser.add_argument("--out-root", type=Path, required=True, help="PyHealth tcga_data root")
+    parser.add_argument("--out-root", type=Path, required=True, help="root of the per-file embedding layout")
     parser.add_argument("--expected-dim", type=int, help="Override the modality's expected dimension")
     parser.add_argument("--study-only", action="store_true",
                         help="Keep only patients present in split_cases.csv")
@@ -202,7 +203,7 @@ def main() -> None:
     if not result["passed"]:
         raise SystemExit("HDF5 CONVERSION AUDIT FAILED!")
     print("HDF5 CONVERSION AUDIT PASSED!" if args.check_only else "HDF5 CONVERSION COMPLETE!")
-    print("After adding vectors, refresh PyHealth generated modality indexes and task caches.")
+    print("After adding vectors, rerun export_parquet.py and export_pyhealth.py for PyHealth.")
 
 
 if __name__ == "__main__":

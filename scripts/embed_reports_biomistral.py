@@ -8,13 +8,13 @@ Uses a quantized Transformers backbone with final-token mean-free pooling;
 this is NOT guaranteed numerically identical to the paper's BF16/vLLM run.
 
 Examples:
-  python data/scripts/embed_reports_biomistral.py \
+  python scripts/embed_reports_biomistral.py \
     --reports data/summarized_reports.csv --splits results/split_cases.csv \
-    --output-dir /private/embeddings/report --max-new 5
+    --output-dir tcga10/embeddings/report --max-new 5
 
-  python data/scripts/embed_reports_biomistral.py \
+  python scripts/embed_reports_biomistral.py \
     --reports data/summarized_reports.csv --splits results/split_cases.csv \
-    --output-dir /private/embeddings/report --check-only
+    --output-dir tcga10/embeddings/report --check-only
 """
 
 from __future__ import annotations

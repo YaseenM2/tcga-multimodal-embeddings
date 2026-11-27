@@ -2,11 +2,12 @@
 # requires-python = ">=3.12,<3.14"
 # dependencies = ["pyarrow==23.0.1", "scikit-survival==0.28.0"]
 # ///
-"""Reference survival baseline on the team's data contract, as in Song et al.
+"""Reference survival baseline on patient-level Parquet embeddings, as in Song et al.
 
 A plain scikit-survival re-run of the authors' ``run_experiment``
 (``experiments/1-survival-experiments.ipynb``), used to sanity-check real-data
-results and the PyHealth pipeline. For every fold in ``folds.csv``:
+results and the PyHealth pipeline. For every fold in ``folds.csv`` (or
+``split_cases.csv``):
 
 * demographics (sex, age bin, race, ethnicity) and cancer type: one-hot
   (``drop="if_binary"``, fitted on all cases, as the authors do), no scaling;
@@ -23,16 +24,22 @@ the C-index over that type's test cases in each fold, averaged over folds
 Run on the authors' full 7,982-case tables, this reproduces their published
 demographics, cancer-type and combined C-indices exactly.
 
-Inputs (``--data``, the DL4H-project ``data/`` folder): ``clinical.csv``,
-``folds.csv`` and ``embeddings/{expr,hist,text}.parquet``. Missing embedding
-files are skipped with a note (e.g. no ``hist.parquet``).
+Inputs (``--data``, one data folder): ``clinical.csv``, the folds and
+``embeddings/{expr,hist,text}.parquet``. The folds come from ``folds.csv``
+(``case_id``, ``fold``) or, if that file is absent, from ``split_cases.csv``
+(``case_id``, ``split``, the file format that select_cohort.py and
+export_pyhealth.py write); then cases of ``clinical.csv`` without a split are
+skipped with a note; if no case has a split, the script fails. Only the
+file format matches: an export_pyhealth.py output folder is not a valid
+``--data``, because it holds ``.npy`` folders, not the Parquet files.
+Missing embedding files are skipped with a note (e.g. no ``hist.parquet``).
 
 The paper's Table 17 models were trained on all 32 cancer types (7,982
 patients); a run on the 10-cohort subset trains on 873 patients only, so the
 numbers are comparable in method but not in training data.
 
 Example:
-    uv run analysis/reference_coxph.py --data data --out analysis/results/pca256
+    uv run scripts/reference_coxph.py --data data --out results/pca256
 """
 
 import argparse
@@ -127,7 +134,8 @@ def load(
     """Loads clinical data, survival labels and patient-level embeddings.
 
     Args:
-        data: Folder with ``clinical.csv``, ``folds.csv`` and ``embeddings/``.
+        data: Folder with ``clinical.csv``, ``folds.csv`` or
+            ``split_cases.csv``, and ``embeddings/``.
         modalities: Embedding names to load; absent files are skipped.
 
     Returns:
@@ -135,16 +143,34 @@ def load(
         structured survival array, and one feature matrix per loaded modality.
 
     Raises:
-        ValueError: If folds, survival times or embedding rows are missing.
+        ValueError: If folds, survival times or embedding rows are missing, or
+            no case of ``clinical.csv`` has a row in ``split_cases.csv``.
     """
     import pyarrow.parquet as pq
 
     clin = pd.read_csv(data / "clinical.csv")
-    folds = pd.read_csv(data / "folds.csv")
+    folds_path = data / "folds.csv"
+    if folds_path.exists():
+        folds = pd.read_csv(folds_path)
+    else:
+        folds_path = data / "split_cases.csv"
+        folds = pd.read_csv(folds_path).rename(columns={"split": "fold"})
+        in_study = clin["case_id"].isin(folds["case_id"])
+        if not in_study.any():
+            raise ValueError(
+                f"no case in clinical.csv has a row in {folds_path.name}; "
+                "check that both files list the same case_id values"
+            )
+        if not in_study.all():  # select_cohort.py keeps cases without a split
+            print(
+                f"note: {int((~in_study).sum())} of {len(clin)} clinical.csv cases "
+                f"have no row in {folds_path.name}; skipped"
+            )
+        clin = clin[in_study]
     df = clin.merge(folds[["case_id", "fold"]], on="case_id", validate="one_to_one")
     df = df.sort_values("case_id").reset_index(drop=True)  # as the authors do
     if len(df) != len(clin):
-        raise ValueError("folds.csv does not cover every case in clinical.csv")
+        raise ValueError(f"{folds_path.name} does not cover every case in clinical.csv")
     dead = (df["vital_status"] == "Dead").to_numpy()
     days = np.where(dead, df["days_to_death"], df["days_to_last_follow_up"])
     days = days.astype(float)
@@ -353,7 +379,12 @@ def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    p.add_argument("--data", type=Path, required=True, help="DL4H-project data/")
+    p.add_argument(
+        "--data",
+        type=Path,
+        required=True,
+        help="folder with clinical.csv, folds.csv or split_cases.csv, embeddings/",
+    )
     p.add_argument(
         "--modalities", nargs="+", default=list(EMBEDDINGS), choices=EMBEDDINGS
     )

@@ -40,7 +40,7 @@ def test_subset_counts_and_prefix_handling(tmp_path):
 def test_unknown_project_rejected(tmp_path):
     c, s = _tables(tmp_path)
     with pytest.raises(ValueError, match="TCGA-USC"):
-        sc.select(c, s, ["USC"])  # the proposal's typo for UCS
+        sc.select(c, s, ["USC"])  # a common typo for UCS
 
 
 def test_cli_writes_files(tmp_path):

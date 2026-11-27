@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Aggregate precomputed UNI2-h patch features into PyHealth slide embeddings.
+"""Aggregate precomputed UNI2-h patch features into per-slide .npy embeddings.
 
 CPU-only; does not download gated files or load the UNI2-h model. Supports
 MahmoodLab TCGA .tar.gz archives without extracting every slide to disk and
@@ -10,13 +10,13 @@ Uses the *mean* of the patch embeddings, matching the authors' aggregation
 choice (but float64 accumulation can cause tiny roundoff differences).
 
 Examples:
-  python data/scripts/aggregate_uni2_histology.py \\
-    --archive /private/TCGA-DLBC.tar.gz --splits /private/split_cases.csv \\
-    --out-root /private/tcga_data --max-new 5
+  python scripts/aggregate_uni2_histology.py \\
+    --archive TCGA-DLBC.tar.gz --splits tcga10/split_cases.csv \\
+    --out-root tcga10 --max-new 5
 
-  python data/scripts/aggregate_uni2_histology.py \\
-    --archive /private/TCGA-DLBC.tar.gz --splits /private/split_cases.csv \\
-    --out-root /private/tcga_data --check-only
+  python scripts/aggregate_uni2_histology.py \\
+    --archive TCGA-DLBC.tar.gz --splits tcga10/split_cases.csv \\
+    --out-root tcga10 --check-only
 """
 
 from __future__ import annotations
@@ -257,7 +257,7 @@ def main() -> None:
     source.add_argument("--archive", type=Path, help="Gated MahmoodLab TCGA-<project>.tar.gz archive")
     source.add_argument("--source-dir", type=Path, help="Directory of extracted slide .h5 files")
     parser.add_argument("--splits", type=Path, required=True, help="Study split_cases.csv")
-    parser.add_argument("--out-root", type=Path, required=True, help="PyHealth TCGA data root")
+    parser.add_argument("--out-root", type=Path, required=True, help="root of the per-file embedding layout")
     parser.add_argument("--max-new", type=int, default=None, help="Generate at most N new slide vectors")
     parser.add_argument("--check-only", action="store_true", help="Validate saved vectors for this archive/dir")
     parser.add_argument("--chunk-patches", type=int, default=4096)
